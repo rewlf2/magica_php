@@ -168,7 +168,18 @@
             return "Success";
     }
 
-    public static function isolateSessionByIp($uid, $ip) {
+    public static function isolateSessionByIp($uid) {
+        
+        if (!empty($_SERVER["HTTP_CLIENT_IP"])) {
+            $ip = $_SERVER["HTTP_CLIENT_IP"];
+        }
+        elseif(!empty($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+            $ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
+        }
+        else {
+            $ip = $_SERVER["REMOTE_ADDR"];
+        }
+        
         $db = Db::getInstance();
         $req = $db->prepare('DELETE FROM '.Db::getPrefix().'session WHERE uid=:uid AND ip<>:ip');
         // the query was prepared, now we replace :id with our actual $id value

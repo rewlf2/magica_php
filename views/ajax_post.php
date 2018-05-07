@@ -22,7 +22,7 @@
 				// Validation variables
 				// An error text can be used for real-timefeedback to users and for debugging
 				
-				// alert(xmlHttp.responseText);
+				alert(xmlHttp.responseText);
 				// error.innerHTML = xmlHttp.responseText;
 				var duce = jQuery.parseJSON(xmlHttp.responseText);
 
@@ -49,17 +49,21 @@
         switch (controller) {
         case 'game_menu':
             switch (action) {
+            case 'setting':
+                        query_php = "models/game_menu/query_user_update.php";
+                        post_parameter = "&username=" + document.getElementById("username").innerHTML + "&email=" + document.getElementById("email").value + "&nickname=" + document.getElementById("nickname").value;
+            break;
             case 'setting_session':
                 switch (request) {
                 case 'destroy':
-                    query_php = "models/admin/query_session_destroy.php";
-                    post_parameter = "session_id=" + document.getElementById("sid"+count).innerHTML + "&target_uid=" + document.getElementById("uid").innerHTML;
+                    query_php = "models/game_menu/query_session_destroy.php";
+                    post_parameter = "session_id=" + document.getElementById("sid"+count).innerHTML;
                 break;
                 case 'destroyall':
                     single_confirm = 'yes';
-                    single_confirm_text = "You are about to destroy all sessions for user "+document.getElementById("username").innerHTML;
-                    query_php = "models/admin/query_session_destroyall.php";
-                    post_parameter = "target_uid=" + document.getElementById("uid").innerHTML;
+                    single_confirm_text = "You are about to destroy all sessions from other locations!";
+                    query_php = "models/game_menu/query_session_destroyall.php";
+                    post_parameter = "";
                 break;
                 }
             break;

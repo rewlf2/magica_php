@@ -1,4 +1,5 @@
 <?php
+require_once('config.php');
   class User {
     // they are public so that we can access them using $post->attri directly
     public $uid;
@@ -10,6 +11,7 @@
     public $role;
     public $nickname;
     public $ban_time;
+    public $banned;
 
     public $ap_max;
     public $ap_losstick;
@@ -20,7 +22,7 @@
     public $ap_current;
     public $hp_current;
 
-    public function __construct($uid, $username, $email, $password, $creation_date, $last_login_date, $role, $nickname, $ban_time,
+    public function __construct($uid, $username, $email, $password, $creation_date, $last_login_date, $role, $nickname, $ban_time, $banned,
                                 $ap_max, $ap_losstick, $ap_extra, $hp_max, $hp_losstick, $hp_extra) {
       $this->uid             = $uid;
       $this->username        = $username;
@@ -31,6 +33,7 @@
       $this->role            = $role;
       $this->nickname        = $nickname;
       $this->ban_time        = $ban_time;
+      $this->banned          = $banned;
 
       $this->ap_max         = $ap_max;
       $this->ap_losstick    = $ap_losstick;
@@ -39,18 +42,15 @@
       $this->hp_losstick    = $hp_losstick;
       $this->hp_extra       = $hp_extra;
 
-      require_once('game_config.php');
-      $gc = new GameConfig();
-
       if ($this->ap_losstick >0)
         $this->ap_current = $this->ap_max;
       else
-        $this->ap_current = floor ($this->ap_max + $ap_losstick/$gc->gcApInterval());
+        $this->ap_current = floor ($this->ap_max + $ap_losstick/Config::AP_INTERVAL);
 
       if ($this->hp_losstick >0)
         $this->hp_current = $this->hp_max;
       else
-        $this->hp_current = floor ($this->hp_max + $hp_losstick/$gc->gcHpInterval());
+        $this->hp_current = floor ($this->hp_max + $hp_losstick/Config::HP_INTERVAL);
     }
 
     //Prototype get function that retrieves even security information
@@ -60,7 +60,7 @@
       $db = Db::getInstance();
 
       $query = 'SELECT uid, username, email, password, creation_date, last_login_date, role, nickname, ban_time,
-      ap_max, now()-ap_tick AS ap_losstick, ap_extra, hp_max, now()-hp_tick AS hp_losstick, hp_extra FROM '.Db::getPrefix().'user';
+      ap_max, now()-ap_tick AS ap_losstick, ap_extra, hp_max, now()-hp_tick AS hp_losstick, hp_extra, ban_time>NOW() as banned FROM '.Db::getPrefix().'user';
       $query .= ' ORDER BY uid ASC LIMIT :limit OFFSET :offset';
 
       $req = $db->prepare($query);
@@ -70,7 +70,7 @@
 
       // we create a list of Post objects from the database results
       foreach($req->fetchAll() as $user) {
-        $list[] = new User($user['uid'], $user['username'], $user['email'], $user['password'], $user['creation_date'], $user['last_login_date'], $user['role'], $user['nickname'], $user['ban_time'],
+        $list[] = new User($user['uid'], $user['username'], $user['email'], $user['password'], $user['creation_date'], $user['last_login_date'], $user['role'], $user['nickname'], $user['ban_time'], $user['banned'],
                            $user['ap_max'], $user['ap_losstick'], $user['ap_extra'], $user['hp_max'], $user['hp_losstick'], $user['hp_extra']);
       }
       return $list;
@@ -81,13 +81,13 @@
       // we make sure $id is an integer
       $uid = intval($uid);
       $req = $db->prepare('SELECT uid, username, email, password, creation_date, last_login_date, role, nickname, ban_time,
-      ap_max, now()-ap_tick AS ap_losstick, ap_extra, hp_max, now()-hp_tick AS hp_losstick, hp_extra FROM '.Db::getPrefix().'user WHERE uid = :uid');
+      ap_max, now()-ap_tick AS ap_losstick, ap_extra, hp_max, now()-hp_tick AS hp_losstick, hp_extra, ban_time>NOW() as banned FROM '.Db::getPrefix().'user WHERE uid = :uid');
       // the query was prepared, now we replace :id with our actual $id value
       $req->execute(array('uid' => $uid));
       $user = $req->fetch();
 
-      return new User($user['uid'], $user['username'], $user['email'], $user['password'], $user['creation_date'], $user['last_login_date'], $user['role'], $user['nickname'], $user['ban_time'],
-      $user['ap_max'], $user['ap_losstick'], $user['ap_extra'], $user['hp_max'], $user['hp_losstick'], $user['hp_extra']);
+      return new User($user['uid'], $user['username'], $user['email'], $user['password'], $user['creation_date'], $user['last_login_date'], $user['role'], $user['nickname'], $user['ban_time'], $user['banned'],
+      $user['ap_max'], $user['ap_losstick'], $user['ap_extra'], $user['hp_max'], $user['hp_losstick'], $user['hp_extra'], $user['banned']);
     }
     public static function findSingleAsList($uid) {
       $list = [];
@@ -107,26 +107,28 @@
 
     public static function findByUsername($username) {
       $db = Db::getInstance();
-      $req = $db->prepare('SELECT * FROM '.Db::getPrefix().'user WHERE username = :username');
+      $req = $db->prepare('SELECT uid, username, email, password, creation_date, last_login_date, role, nickname, ban_time,
+      ap_max, now()-ap_tick AS ap_losstick, ap_extra, hp_max, now()-hp_tick AS hp_losstick, hp_extra, ban_time>NOW() as banned FROM '.Db::getPrefix().'user WHERE username = :username');
       // the query was prepared, now we replace :id with our actual $id value
       $req->execute(array('username' => $username));
       $user = $req->fetch();
 
       $list = [];
-      $list[] = new User($user['uid'], $user['username'], $user['email'], $user['password'], $user['creation_date'], $user['last_login_date'], $user['role'], $user['nickname'], $user['ban_time'],
+      $list[] = new User($user['uid'], $user['username'], $user['email'], $user['password'], $user['creation_date'], $user['last_login_date'], $user['role'], $user['nickname'], $user['ban_time'], $user['banned'],
                          $user['ap_max'], $user['ap_losstick'], $user['ap_extra'], $user['hp_max'], $user['hp_losstick'], $user['hp_extra']);
       return $list;
     }
 
     public static function findByEmail($email) {
       $db = Db::getInstance();
-      $req = $db->prepare('SELECT * FROM '.Db::getPrefix().'user WHERE email = :email');
+      $req = $db->prepare('SELECT uid, username, email, password, creation_date, last_login_date, role, nickname, ban_time,
+      ap_max, now()-ap_tick AS ap_losstick, ap_extra, hp_max, now()-hp_tick AS hp_losstick, hp_extra, ban_time>NOW() as banned FROM '.Db::getPrefix().'user WHERE email = :email');
       // the query was prepared, now we replace :id with our actual $id value
       $req->execute(array('email' => $email));
       $user = $req->fetch();
 
       $list = [];
-      $list[] = new User($user['uid'], $user['username'], $user['email'], $user['password'], $user['creation_date'], $user['last_login_date'], $user['role'], $user['nickname'], $user['ban_time'],
+      $list[] = new User($user['uid'], $user['username'], $user['email'], $user['password'], $user['creation_date'], $user['last_login_date'], $user['role'], $user['nickname'], $user['ban_time'], $user['banned'],
                          $user['ap_max'], $user['ap_losstick'], $user['ap_extra'], $user['hp_max'], $user['hp_losstick'], $user['hp_extra']);
       return $list;
     }

@@ -48,11 +48,9 @@ Game_Config contains most of customizable information including:
 1. The time for automated IP block
 1. Hours of inactivity for a session to get expired
 
-The functionality of Magica is not completely finished, but it is expected the inactivity and account expiration will be implemented in future.
+It is expected account expiration will be implemented in future.
 
 Database information is defined in [Connection.php](Connection.php) as per standard of its original framework.
-
-Pagination does not access database, I expect it to be put in View folder later.
 
 User, User_log, Session and Ip_block classes are used to construct a complete logging system with only encrypted password as its login method.
 

@@ -11,7 +11,7 @@
             <?php
                 echo '
                     <td><div id="uid">'.$user->uid.'</div></td>
-                    <td><div id="uername">'.$user->username.'</div></td>
+                    <td><div id="username">'.$user->username.'</div></td>
                     <td><input type="text" class="form-control" id="email" value="'.$user->email.'"></td>
                     <td><input type="text" class="form-control" id="nickname" value="'.$user->nickname.'"></td>
                     <td><div id="role">'.$user->role.'</div></td>

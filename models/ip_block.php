@@ -1,5 +1,5 @@
 <?php
-  include_once("game_config.php");
+  include_once("config.php");
   class Ip_block {
     // they are public so that we can access them using $post->attri directly
     public $ip;
@@ -83,11 +83,9 @@
     $req2->execute(array('ip' => $ip));
     $res = $req2->fetch();
 
-    $gc = new GameConfig();
-
-    if ($res['attack_count']>= $gc->gcIpAttackCount()) {
+    if ($res['attack_count']>= Config::IP_ATTACK_COUNT) {
       $req3 = $db->prepare('UPDATE '.Db::getPrefix().'ip_block SET attack_count=0, ban_time = DATE_ADD(NOW(), interval :ban_time hour) WHERE ip = :ip');
-      $req3->execute(array('ip' => $ip, 'ban_time' => $gc->gcIpBanInterval() ));
+      $req3->execute(array('ip' => $ip, 'ban_time' => Config::IP_BAN_INTERVAL ));
     }
   }
 

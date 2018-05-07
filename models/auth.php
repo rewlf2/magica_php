@@ -44,7 +44,17 @@ class Auth {
             foreach($this->sessions as $session) {
                 if (strcmp($session->session_id, $this->session_id) ==0) {
                     if (strcmp($session->series_id, $this->series_id) ==0) {
-                        $result = User::getRole($this->uid);
+                        $user = User::find($this->uid);
+                        if ($session->hour>Config::SESSION_EXPIRE) {
+                            Session::destroySession($this->session_id);
+                            User_log::insert($_SESSION["uid"], "Login", "User signed out due to expired session", 1, NULL);
+                            $result = 'Expired';
+                        } else if ($user->banned ==1) {
+                            Session::destroySession($this->session_id);
+                            User_log::insert($_SESSION["uid"], "Login", "User signed out due to banned", 1, NULL);
+                            $result = 'Banned';
+                        } else
+                            $result = $user->role;
                     }
                 }
             }
@@ -67,6 +77,7 @@ class Auth {
                     $_SESSION['series_id'] = $ss->series_id;
                     $_SESSION['ip'] = $ss->ip;
                     $_SESSION['date'] = $ss->date;
+                    $this->uid = $ss->uid;
                     $this->session_id = $ss->session_id;
                     $this->series_id = $ss->series_id;
                     $this->ip = $ss->ip;
@@ -118,10 +129,16 @@ class Auth {
                 if (strcmp($session->ip, $this->ip) ==0) {
                     if (strcmp($session->session_id, $this->session_id) ==0) {
                         if (strcmp($session->series_id, $this->series_id) ==0) {
-                            $new_series_id = Session::refreshSession($this->session_id);
-                            $_SESSION['series_id'] = $new_series_id;
-                            $this->session_id = $new_series_id;
-                            $result = 'Refresh';
+                            if ($session->hour>Config::SESSION_EXPIRE) {
+                                Session::destroySession($this->session_id);
+                                User_log::insert($_SESSION["uid"], "Login", "User signed out due to expired session", 1, NULL);
+                                $result = 'Expired';
+                            } else {
+                                $new_series_id = Session::refreshSession($this->session_id);
+                                $_SESSION['series_id'] = $new_series_id;
+                                $this->session_id = $new_series_id;
+                                $result = 'Refresh';
+                            }
                         }
                     }
                 }

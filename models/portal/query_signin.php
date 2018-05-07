@@ -39,15 +39,22 @@ else
 	$password = $_POST['password'];
 
 	// Whenever a fatal error might happen, forceStop is checked to ensure quickest execution.	
-	if (!$forceStop)
-	{
+	if (!$forceStop) {
 		if (strcmp($cred, "")==0 || strcmp($password, "")==0) {
 			$forceStop = true;
 			$errorType = "Credential not inputted";
 		}
 	}
-	if (!$forceStop)
-	{
+	if (!$forceStop) {
+		$uid = User::findUid($cred);
+		$user = User::find($uid);
+		if ($user->banned ==1) {
+			$forceStop = true;
+			$errorType = "Your account has been banned.<br/>It will be unlocked at: ".$user->ban_time;
+			User_log::insert(NULL, "Login", "Banned account attempts", 1, NULL);
+		}
+	}
+	if (!$forceStop) {
 		$errorType = User::verifyCred($cred, $password);
 		if (strcmp($errorType, 'Success') == 0) {
 

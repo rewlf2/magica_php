@@ -2,6 +2,7 @@
   require_once('models/session.php');
   require_once('models/user.php');
   require_once('models/user_log.php');
+  require_once('models/config.php');
   require_once('models/auth.php');
   class AdminController {
     public $sessions;
@@ -39,7 +40,7 @@
         $get_type = isset($_GET['type']) && strcmp($_GET['type'], "")!=0 ? $_GET['type']: "";
         
         require_once('models/ip_block.php');
-        require_once('models/pagination.php');
+        require_once('views/pagination.php');
         $number_of_session = 1;
         switch ($get_type) {
           case 'active':
@@ -76,7 +77,7 @@
         $get_offset = isset($_GET['offset']) && strcmp($_GET['offset'], "")!=0 ? $_GET['offset']: 0;
 
         require_once('models/game_config.php');
-        require_once('models/pagination.php');
+        require_once('views/pagination.php');
         
         if (!ISSET($_GET['cred'])) {
           $users = User::all($get_limit, $get_offset);
@@ -120,7 +121,7 @@
           $number_of_session = Session::getNumberOfSession($_GET['uid']);
           $user = User::find($_GET['uid']);
         }
-        require_once('models/pagination.php');
+        require_once('views/pagination.php');
         $pagination = new Pagination($get_limit, $get_offset, $number_of_session['sessions']);
         $current_page = 'other';
         require_once('views/ajax_post.php');
@@ -150,7 +151,7 @@
         $user_logs = User_log::getLogs($get_cred, $get_type, $get_ip, $get_min_date, $get_max_date, $get_min_importance, $get_limit, $get_offset);
         $number_of_logs = User_log::getNumberOfLogs($get_cred, $get_type, $get_ip, $get_min_date, $get_max_date, $get_min_importance);
       
-        require_once('models/pagination.php');
+        require_once('views/pagination.php');
         $pagination = new Pagination($get_limit, $get_offset, $number_of_logs);
         $current_page = 'other';
         require_once('views/ajax_post.php');

@@ -1,4 +1,5 @@
 <h5><div class="error" name="error" id="error" style="font-size: 12px; color:#f1c40f;"></div></h5>
+<?php echo "<a class='btn btn-danger' onclick='ajaxPost(".'"'."destroyall".'"'.")'>Destroy all sessions from other locations</a>"; ?>
 <div class="table-responsive-md content-block">
   <table class="table">
     <thead>
